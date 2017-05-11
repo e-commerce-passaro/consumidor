@@ -1,10 +1,10 @@
 {
   "name" : "e-commerce-passaro/consumidor",
   "description" : "Biblioteca para as ações do consumidor",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "type":"library",
   "homepage":"https://github.com/e-commerce-passaro/consumidor",
-  "time":"2017-05-04 16:30:07",
+  "time":"2017-05-11 14:33:08",
   "license":"GPL-3.0+",
   "authors":[{
 	"name":"Marcel Bezerra da Silva",
@@ -25,7 +25,7 @@
 	"e-commerce-passaro/pagamento" : "0.1.1",
 	"e-commerce-passaro/compra" : "1.0.3",
     "e-commerce-passaro/paypal" : "0.0.1",
-    "e-commerce-passaro/acesso" : "1.0.2"
+    "e-commerce-passaro/acesso" : "1.1.0"
   },
   "keywords" : [ "e-commerce-passaro", "zf3", "ecommerce", "consumidor" ],
   "autoload": {
