@@ -1,13 +1,11 @@
 <?php
-namespace Ecompassaro\Consumidor\Pagamento;
+namespace Ecompassaro\Consumidor\Compra\Pagamento\Paypal;
 
 use Zend\EventManager\ListenerAggregateInterface;
 use Zend\EventManager\EventManagerInterface;
 use Zend\EventManager\EventInterface;
-use Zend\Hydrator\ArraySerializable;
-use Ecompassaro\Pagamento\Pagamento;
-use Ecompassaro\Pagamento\Manager as PagamentoManager;
 use Ecompassaro\Consumidor\Compra\ViewModel as CompraViewModel;
+use Ecompassaro\Consumidor\Compra\Pagamento\Paypal\Payment;
 
 /**
  * Listener para eventos de pagamentos
@@ -16,15 +14,17 @@ class Events implements ListenerAggregateInterface
 {
 
     protected $listeners = array();
-    protected $pagamentoManager;
+    protected $payment;
+    protected $eventManager;
 
     /**
      * Injeta dependências
      * @param \Pagamento\PagamentoManager $pagamentoManager
      */
-    public function __construct(PagamentoManager $pagamentoManager)
+    public function __construct($paypalConfig, $debugMode = false)
     {
-        $this->pagamentoManager = $pagamentoManager;
+      $this->payment = new Payment ($paypalConfig, $debugMode);
+      $this->pagamentoManager = $pagamentoManager;
     }
 
     /**
@@ -32,7 +32,8 @@ class Events implements ListenerAggregateInterface
      */
     public function attach(EventManagerInterface $events, $priority = 1)
     {
-        $this->listeners[] = $events->attach(CompraViewModel::EVENT_COMPRA_FINALIZADA, array($this, 'registrarPagamento'));
+      $this->eventManager = $events;
+      $this->listeners[] = $events->attach(CompraViewModel::EVENT_COMPRA_RASCUNHO, array($this, 'createPayment'));
     }
 
     /**
@@ -46,9 +47,11 @@ class Events implements ListenerAggregateInterface
      * Registra o pagamento a partir dos dados passados pelo evento
      * @param EventInterface $e
      */
-    public function registrarPagamento(EventInterface $e)
+    public function createPayment(EventInterface $e)
     {
-        $pagamento = (new ArraySerializable())->hydrate($e->getParams(), new Pagamento());
-        $this->pagamentoManager->salvar($pagamento);
+      $compra = $e->getParams();
+      $this->payment->create($compra);
+      //TODO salvar campos do paypal na compra
+      $this->eventManager->trigger(self::EVENT_COMPRA_CRIADA, $this, $compra);
     }
 }

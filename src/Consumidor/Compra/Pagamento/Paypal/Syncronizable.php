@@ -1,5 +1,5 @@
 <?php
-namespace Ecompassaro\Consumidor\Paypal\Payment;
+namespace Ecompassaro\Consumidor\Compra\Pagamento\Paypal;
 
 interface Syncronizable
 {
