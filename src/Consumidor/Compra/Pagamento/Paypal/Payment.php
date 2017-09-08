@@ -36,15 +36,22 @@ class Payment
 
   public function create(Compra $compra)
   {
-    $create = new Create($compra, $this->apiContext, $this->callbacks);
-    return $create->sync();
+      $create = new Create($compra, $this->apiContext, $this->callbacks);
+      $payment = $create->sync();
+      $compra->setUrlPagamento($payment->getApprovalLink());
+      $compra->setExternalId($payment->getId());
+      return $url;
   }
 
   public function cancel($paymentId, $payerId)
   {
+    //event cancelado
   }
 
-  public function success($paymentId, $payerId)
+  public function execute($paymentId, $payerId)
   {
+    //execute
+    //get
+    //event finalizado
   }
 }

@@ -8,9 +8,6 @@ use Ecompassaro\Compra\Manager as CompraManager;
 use Ecompassaro\Compra\Compra;
 use Ecompassaro\Notificacao\NotificacoesContainerTrait;
 use Ecompassaro\Notificacao\Notificacao;
-// use Paypal\ExpressCheckout\ExpressCheckout;
-// use Paypal\ExpressCheckout\PaymentRequest\PaymentRequest;
-// use Paypal\ExpressCheckout\PaymentRequest\LPaymentRequest;
 
 /**
  * Gerador da estrutura da página de anúncios
@@ -24,32 +21,10 @@ class ViewModel extends ZendViewModel
 
     const MESSAGE_INTERNAL_ERROR = 'A compra do item #%d não aconteceu!';
 
-    //nada aconteceu (acionado pela compra) [trigada pelo evento de salvamento da compra]
-    const EVENT_COMPRA_INICIADA = 'compra.iniciada'; // chamada pelo criar
-
-    //salva no banco (acionada pelo evento da compra de salvamento)
-    const EVENT_COMPRA_RASCUNHO = 'compra.rascunho'; // chamada pelo criar
-
-    //salva no paypal (acionada pela compra)
-    const EVENT_COMPRA_CRIADA = 'compra.criada'; // chamada pelo criar
-
-    //salva no banco (acionada pelo evento da compra de salvamento)
-    const EVENT_COMPRA_PENDENTE = 'compra.pendente'; // chamada pelo criar
-
-    //executada no paypal (acionada pela compra)
-    const EVENT_COMPRA_EXECUTADA = 'compra.executada'; // chamada pelo finalizar e cancelar
-
-    //salva no banco (acionada pelo evento da compra de salvamento)
-    const EVENT_COMPRA_CANCELADA = 'compra.cancelada'; // chamada pelo cancelar
-
-    //salva no banco (acionada pelo evento da compra de salvamento)
-    const EVENT_COMPRA_FINALIZADA = 'compra.finalizada'; // chamada pelo cancelar
-
     private $compraManager;
     private $hydrator;
     private $form;
     private $eventManager;
-    private $expressCheckout;
 
     /**
      * Injeta dependências
@@ -57,7 +32,7 @@ class ViewModel extends ZendViewModel
      * @param \Produto\ProdutoManager $compraManager
      * @param CompraForm $form
      */
-    public function __construct(CompraManager $compraManager, Form $form, HydrationInterface $hydrator, EventManagerInterface $eventManager, /*ExpressCheckout $expressCheckout,*/ $params = array())
+    public function __construct(CompraManager $compraManager, Form $form, HydrationInterface $hydrator, EventManagerInterface $eventManager, $params = array())
     {
         $this->compraManager = $compraManager;
         $this->hydrator = $hydrator;
@@ -66,8 +41,9 @@ class ViewModel extends ZendViewModel
 
         $produtoId = false;
         extract($params);
-        if ($produtoId) {
-            $this->variables['formulario'] = $form->setProdutoId($produtoId)->prepare();
+        if ($produtoId && $autenticacao_id) {
+            $temporaryId = $autenticacao_id . $produtoId;
+            $this->variables['formulario'] = $form->setProdutoId($produtoId)->setTemporaryId($temporaryId)->prepare();
             $this->variables['produto'] = $compraManager->getProdutoManager()->getProduto($produtoId);
         }
     }
@@ -86,14 +62,12 @@ class ViewModel extends ZendViewModel
             $dados['status_id'] = $statusFinalizada->getId();
             $compra = $this->hydrator->hydrate($dados, new Compra());
             $compra = $this->compraManager->salvar($compra);
-
             $this->compraManager->preencherCompra($compra);
-
-            $this->eventManager->trigger(self::EVENT_COMPRA_FINALIZADA, $this, $dados);
-
+            $this->eventManager->trigger(Compra::STATUS_FINALIZADA, $this, $dados);
             $this->addNotificacao(new Notificacao(Notificacao::TIPO_SUCESSO, self::MESSAGE_FINALIZADA_SUCCESS, array(
                 $compra->getProdutoId()
             )));
+
         } catch (\Exception $e) {
             die($e->getMessage().' '.$e->getTraceAsString());
             $this->addNotificacao(new Notificacao(Notificacao::TIPO_ERRO, self::MESSAGE_INTERNAL_ERROR, array(
@@ -121,7 +95,7 @@ class ViewModel extends ZendViewModel
 
             $this->compraManager->preencherCompra($compra);
 
-            $this->eventManager->trigger(self::EVENT_COMPRA_FINALIZADA, $this, $dados);
+            $this->eventManager->trigger(Compra::STATUS_FINALIZADA, $this, $dados);
 
             $this->addNotificacao(new Notificacao(Notificacao::TIPO_SUCESSO, self::MESSAGE_FINALIZADA_SUCCESS, array(
                 $compra->getProdutoId()
@@ -146,15 +120,14 @@ class ViewModel extends ZendViewModel
     public function criar($dados)
     {
         try {
-            $this->eventManager->trigger(self::EVENT_COMPRA_INICIADA, $this, $dados);
+            $this->eventManager->trigger(Compra::STATUS_INICIADA, $this, $dados);
+            return $this->compraManager->obterCompraTemporary($dados['temporary_id']);
         } catch (\Exception $e) {
             die($e->getMessage().' '.$e->getTraceAsString());
             $this->addNotificacao(new Notificacao(Notificacao::TIPO_ERRO, self::MESSAGE_INTERNAL_ERROR, array(
                 $compra->getProdutoId()
             )));
         }
-
-        return true;
     }
 
     /**

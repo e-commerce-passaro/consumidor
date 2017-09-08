@@ -7,7 +7,7 @@ use Zend\EventManager\EventInterface;
 use Zend\Hydrator\ArraySerializable;
 use Ecompassaro\Pagamento\Pagamento;
 use Ecompassaro\Pagamento\Manager as PagamentoManager;
-use Ecompassaro\Consumidor\Compra\ViewModel as CompraViewModel;
+use Ecompassaro\Compra\Compra;
 
 /**
  * Listener para eventos de pagamentos
@@ -34,7 +34,7 @@ class Events implements ListenerAggregateInterface
     public function attach(EventManagerInterface $events, $priority = 1)
     {
       $this->eventManager = $events;
-      $this->listeners[] = $events->attach(CompraViewModel::EVENT_COMPRA_FINALIZADA, array($this, 'registrarPagamento'));
+      $this->listeners[] = $events->attach(Compra::STATUS_FINALIZADA, array($this, 'registrarPagamento'));
     }
 
     /**

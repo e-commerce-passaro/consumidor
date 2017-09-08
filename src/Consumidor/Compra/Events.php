@@ -6,7 +6,6 @@ use Zend\EventManager\EventManagerInterface;
 use Zend\EventManager\EventInterface;
 use Ecompassaro\Compra\Compra;
 use Ecompassaro\Compra\Manager as CompraManager;
-use Ecompassaro\Consumidor\Compra\ViewModel as CompraViewModel;
 
 /**
  * Listener para eventos de pagamentos
@@ -33,8 +32,8 @@ class Events implements ListenerAggregateInterface
     public function attach(EventManagerInterface $events, $priority = 1)
     {
       $this->eventManager = $events;
-      $this->listeners[] = $events->attach(CompraViewModel::EVENT_COMPRA_INICIADA, array($this, 'iniciar'));
-      $this->listeners[] = $events->attach(CompraViewModel::EVENT_COMPRA_CRIADA, array($this, 'aguardar'));
+      $this->listeners[] = $events->attach(Compra::STATUS_INICIADA, array($this, 'iniciar'));
+      $this->listeners[] = $events->attach(Compra::STATUS_CRIADA, array($this, 'aguardar'));
     }
 
     /**
@@ -46,24 +45,35 @@ class Events implements ListenerAggregateInterface
 
     public function aguardar(EventInterface $e)
     {
-      $compra = $e->getParams();
-      $statusAguardando= $this->compraManager->getStatusManager()->obterStatusbyNome(Compra::STATUS_AGUARDANDO_PAGAMENTO);
-      $compra->setStatus($statusAguardando);
-      $compra = $this->compraManager->salvar($compra);
-      $this->compraManager->preencherCompra($compra);
-      $this->eventManager->trigger(CompraViewModel::EVENT_COMPRA_PENDENTE, $this, $compra);
-    }
+      try {
+          //TODO salvar campos do paypal na compra
+          $compra = $e->getParams();
+          $statusAguardando= $this->compraManager->getStatusManager()->obterStatusbyNome(Compra::STATUS_PENDENTE);
+          $compra->setStatus($statusAguardando);
+          $compra = $this->compraManager->salvar($compra);
+          $this->compraManager->preencherCompra($compra);
+
+          $this->eventManager->trigger(Compra::STATUS_PENDENTE, $this, $compra);
+      } catch(\Exception $e) {
+        throw $e;
+      }
+   }
 
      public function iniciar(EventInterface $e)
      {
-       $dados = $e->getParams();
-       $statusIniciada= $this->compraManager->getStatusManager()->obterStatusbyNome(Compra::STATUS_INICIADA);
-       $dados['status_id'] = $statusIniciada->getId();
-       $compra = $this->hydrator->hydrate($dados, new Compra());
-       $compra = $this->compraManager->salvar($compra);
+         try{
+             $dados = $e->getParams();
+             $statusIniciada= $this->compraManager->getStatusManager()->obterStatusbyNome(Compra::STATUS_RASCUNHO);
+             $dados['status_id'] = $statusIniciada->getId();
+             $compra = $this->hydrator->hydrate($dados, new Compra());
+             $compra = $this->compraManager->salvar($compra);
 
-       $this->compraManager->preencherCompra($compra);
+             $this->compraManager->preencherCompra($compra);
 
-       $this->eventManager->trigger(CompraViewModel::EVENT_COMPRA_RASCUNHO, $this, $compra);
+             $this->eventManager->trigger(Compra::STATUS_RASCUNHO, $this, $compra);
+
+         } catch(\Exception $e) {
+              throw $e;
+         }
      }
 }

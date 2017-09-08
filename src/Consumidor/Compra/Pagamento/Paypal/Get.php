@@ -1,7 +1,7 @@
 <?php
 namespace Ecompassaro\Consumidor\Compra\Pagamento\Paypal;
 
-class Success implements Syncronizable
+class Get implements Syncronizable
 {
   public function __construct()
   {

@@ -64,6 +64,6 @@ class Create implements Syncronizable
   public function sync()
   {
     $this->payment->create($this->apiContext);
-    return $this->payment->getApprovalLink();
+    return $this->payment;
   }
 }

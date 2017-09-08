@@ -10,16 +10,21 @@ class Form extends ZendForm
     public function __construct()
     {
         parent::__construct('formCompra');
-        
+
         $this->setAttribute('method', 'POST');
         $this->setAttribute('accept-charset', 'UTF-8');
         $this->setAttribute('action', '/comprar/');
 
         $this->add(array(
+            'name' => 'temporary_id',
+            'type' => 'Hidden'
+        ));
+
+        $this->add(array(
             'name' => 'produto_id',
             'type' => 'Hidden'
         ));
-        
+
         $this->add(array(
             'name' => 'quantidade',
             'type' => 'Text',
@@ -37,7 +42,7 @@ class Form extends ZendForm
                 'value' => 1
             ),
         ));
-        
+
         $this->add(array(
             'name' => 'submit',
             'type' => 'Submit',
@@ -48,15 +53,37 @@ class Form extends ZendForm
                 'value' => 'Comprar'
             )
         ));
-        
+
         $this->generateInputFilter();
     }
 
     private function generateInputFilter()
     {
         $inputFilterFactory = new InputFilterFactory();
-        
-        $this->setInputFilter($inputFilterFactory->createInputFilter(array(
+
+        $this->setInputFilter($inputFilterFactory->createInputFilter(
+          array(
+            'temporary_id' => array(
+                'name' => 'produto_id',
+                'filters' => array(
+                    array(
+                        'name' => 'StripTags'
+                    ),
+                    array(
+                        'name' => 'StringTrim'
+                    )
+                ),
+                'validators' => array(
+                    array(
+                        'name' => 'NotEmpty',
+                        'options' => array(
+                            'messages' => array(
+                                'isEmpty' => 'O id do produto é obrigatório.'
+                            )
+                        )
+                    )
+                )
+            ),
             'produto_id' => array(
                 'name' => 'produto_id',
                 'filters' => array(
@@ -146,11 +173,16 @@ class Form extends ZendForm
             )
         )));
     }
-    
-    
+
     public function setProdutoId($produtoId)
     {
         $this->get('produto_id')->setValue($produtoId);
+        return $this;
+    }
+
+    public function setTemporaryId($temporaryId)
+    {
+        $this->get('temporary_id')->setValue($temporaryId);
         return $this;
     }
 }
