@@ -17,13 +17,23 @@
   	"wiki":"https://github.com/e-commerce-passaro/consumidor/wiki",
   	"source":"https://github.com/e-commerce-passaro/consumidor/releases"
   },
+  "repositories": [
+    {
+        "type": "vcs",
+        "url": "https://github.com/e-commerce-passaro/pagamento"
+    },
+    {
+        "type": "vcs",
+        "url": "https://github.com/e-commerce-passaro/compra"
+    }
+  ],
   "require" : {
     "php" : ">=7.0",
     "zendframework/zend-form" : "2.10.0",
     "e-commerce-passaro/paypal-express-checkout" : "0.0.1",
     "e-commerce-passaro/notificacao" : "1.0.2",
-    "e-commerce-passaro/pagamento" : "dev-paypal",
-    "e-commerce-passaro/compra" : "dev-paypal-sdk",
+    "e-commerce-passaro/pagamento" : "dev-paypal as 0.1.1",
+    "e-commerce-passaro/compra" : "dev-paypal-sdk as 1.1.0",
     "e-commerce-passaro/paypal" : "0.0.1",
     "e-commerce-passaro/acesso" : "1.1.0"
   },
