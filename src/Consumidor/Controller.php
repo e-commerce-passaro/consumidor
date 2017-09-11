@@ -88,6 +88,39 @@ class Controller extends AcessoController
         return $this->redirect()->toRoute($routeRedirect);
     }
 
+    public function executarPagamentoAction()
+    {
+        $getParams = $this->params()->fromGet();
+
+        $params = array_merge_recursive(
+            $postParams,
+            [
+                'autenticacao_id' => $this->autenticacaoId,
+                'external_id' => $getParams['paymentId'],
+                'external_user_id' => $getParams['PayerID']
+            ]
+        );
+
+        $routeRedirect = $this->params('routeRedirect');
+        $this->getCompraViewModel()->setPreparedData($params);
+
+        if ($this->getCompraViewModel()->getForm()->isValid()) {
+            $compra = $this->getCompraViewModel()->exeutar($this->getCompraViewModel()->getForm()->getData());
+            $this->setFlashMessagesFromNotificacoes($this->getCompraViewModel()->getNotificacoes());
+
+            return $this->statusScreen($compra, $params);
+        } else {
+            $this->setFlashMessagesFromNotificacoes($this->getCompraViewModel()->getForm()->getMessages());
+            $routeRedirect = null;
+        }
+
+        if (!$routeRedirect) {
+            return $this->redirect()->toRoute('site');
+        }
+
+        return $this->redirect()->toRoute($routeRedirect);
+    }
+
     public function comprarAction()
     {
         return $this->getCompraViewModel()->setTemplate('comprar/index');

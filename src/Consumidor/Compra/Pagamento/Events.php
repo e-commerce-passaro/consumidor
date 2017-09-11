@@ -50,7 +50,12 @@ class Events implements ListenerAggregateInterface
      */
     public function registrarPagamento(EventInterface $e)
     {
-        $pagamento = (new ArraySerializable())->hydrate($e->getParams(), new Pagamento());
-        $this->pagamentoManager->salvar($pagamento);
+        $compra = current($e->getParams());
+        if ($compra instanceof Compra) {
+            $pagamento = new Pagamento();
+            $pagamento->setValor($compra->getPreco());
+            $pagamento->setAutenticacao($compra->getAutenticacao());
+            $this->pagamentoManager->salvar($pagamento);
+        }
     }
 }

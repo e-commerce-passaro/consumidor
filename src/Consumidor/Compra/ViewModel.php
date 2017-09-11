@@ -138,7 +138,7 @@ class ViewModel extends ZendViewModel
     {
         $compra = $this->hydrator->hydrate($data, new Compra());
         $this->compraManager->preencherCompra($compra);
-        $data['valor'] = $this->compraManager->caucularValorTotal($compra);
+        $data['valor'] = $compra->getPreco();
         $this->form->setData($data);
         return $this;
     }

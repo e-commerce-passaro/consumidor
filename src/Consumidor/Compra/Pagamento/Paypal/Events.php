@@ -54,9 +54,11 @@ class Events implements ListenerAggregateInterface
      public function createPayment(EventInterface $e)
      {
          try{
-             $compra = $e->getParams();
+           $compra = current($e->getParams());
+           if ($compra instanceof Compra) {
              $this->payment->create($compra);
-             $this->eventManager->trigger(Compra::STATUS_CRIADA, $this, $compra);
+             $this->eventManager->trigger(Compra::STATUS_CRIADA, $this, [$compra]);
+           }
          } catch(\Exception $e) {
               throw $e;
          }
@@ -72,22 +74,14 @@ class Events implements ListenerAggregateInterface
            $paymnet = $get->sync();
 
            if ($payment->getStatus() == 'approved') {
-              $this->eventManager->trigger(Compra::STATUS_ACEITA, $this, $compra);
+              $this->eventManager->trigger(Compra::STATUS_ACEITA, $this, [$compra]);
            } elseif ($payment->getStatus() == 'failed') {
-              $this->eventManager->trigger(Compra::STATUS_RECUSADA, $this, $compra);
+              $this->eventManager->trigger(Compra::STATUS_RECUSADA, $this, [$compra]);
             } elseif ($payment->getStatus() == 'created') {
-              $this->eventManager->trigger(Compra::STATUS_RASCUNHO, $this, $compra);
+              $this->eventManager->trigger(Compra::STATUS_CRIADA, $this, [$compra]);
             } elseif ($payment->getStatus() == 'partially_completed' || 'in_progress') {
-              $this->eventManager->trigger(Compra::STATUS_PAGANDO, $this, $compra);
+              $this->eventManager->trigger(Compra::STATUS_PAGANDO, $this, [$compra]);
             }
        }
-     }
-
-     public function cancelPayment(EventInterface $e)
-     {
-       $compra = $e->getParams();
-       $this->payment->create($compra);
-       //TODO salvar campos do paypal na compra
-       $this->eventManager->trigger(Compra::STATUS_CRIADA, $this, $compra);
      }
 }
